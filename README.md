@@ -13,13 +13,13 @@ Client
   │
   ▼
 ┌─────────────────────────────────────────────────┐
-│              Meridian Gateway (:8000)            │
-│                                                  │
-│  requestLogger ──► CORS ──► GlobalRateLimit      │
-│                                                  │
-│  Route Matcher                                   │
-│   ├── JWT Auth middleware                        │
-│   ├── Per-route Rate Limiter (token bucket)      │
+│              Meridian Gateway (:8000)           │
+│                                                 │
+│  requestLogger ──► CORS ──► GlobalRateLimit     │
+│                                                 │
+│  Route Matcher                                  │
+│   ├── JWT Auth middleware                       │
+│   ├── Per-route Rate Limiter (token bucket)     │
 │   ├── Stats tracker                             │
 │   └── Proxy engine                              │
 │         ├── Circuit Breaker                     │
