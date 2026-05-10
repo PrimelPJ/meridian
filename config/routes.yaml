@@ -1,0 +1,88 @@
+port: 8000
+logLevel: info
+jwtSecret: "${JWT_SECRET}"
+corsOrigins:
+  - "http://localhost:3000"
+  - "https://yourdomain.com"
+
+globalRateLimit:
+  windowMs: 60000       # 1 minute
+  maxRequests: 1000
+  keyBy: ip
+
+routes:
+  # Public auth service — no JWT required
+  - path: /auth
+    targets:
+      - http://auth-service:3001
+    strategy: round-robin
+    stripPrefix: false
+    timeout: 10000
+    rateLimit:
+      windowMs: 60000
+      maxRequests: 20
+      keyBy: ip
+
+  # User API — requires JWT, any authenticated user
+  - path: /api/users
+    targets:
+      - http://user-service:3002
+      - http://user-service-2:3002
+    strategy: round-robin
+    stripPrefix: true
+    timeout: 15000
+    auth:
+      required: true
+    circuitBreaker:
+      threshold: 5
+      timeout: 30000
+      successThreshold: 2
+    addHeaders:
+      X-Gateway: meridian
+      X-Service: user-api
+
+  # Admin API — requires JWT + admin role
+  - path: /api/admin
+    targets:
+      - http://admin-service:3003
+    strategy: least-connections
+    stripPrefix: true
+    timeout: 30000
+    auth:
+      required: true
+      allowedRoles:
+        - admin
+        - superuser
+    rateLimit:
+      windowMs: 60000
+      maxRequests: 100
+      keyBy: user
+
+  # Public product catalog — no auth, generous rate limit
+  - path: /api/products
+    targets:
+      - http://catalog-service:3004
+      - http://catalog-service-2:3004
+      - http://catalog-service-3:3004
+    strategy: random
+    timeout: 5000
+    circuitBreaker:
+      threshold: 10
+      timeout: 60000
+      successThreshold: 3
+
+  # Reporting API — JWT + analyst role, strict rate limit
+  - path: /api/reports
+    targets:
+      - http://report-service:3005
+    strategy: round-robin
+    timeout: 120000
+    auth:
+      required: true
+      allowedRoles:
+        - analyst
+        - admin
+    rateLimit:
+      windowMs: 3600000   # 1 hour
+      maxRequests: 50
+      keyBy: user

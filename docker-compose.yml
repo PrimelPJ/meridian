@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  meridian:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      MERIDIAN_CONFIG: /app/config/routes.yaml
+      LOG_LEVEL: info
+    volumes:
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
